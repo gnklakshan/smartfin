@@ -1,21 +1,20 @@
-import { set } from "date-fns";
 import { toast } from "sonner";
 
-const { useState, useEffect } = require("react");
+const { useState } = require("react");
 
 const USEFETCH = (callback) => {
-  const [data, setData] = useFormState(null);
-  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState(undefined);
+  const [loading, setLoading] = useState(null);
   const [error, setError] = useState(null);
 
-  const fn = async () => {
+  const fn = async (...args) => {
     setLoading(true);
     setError(null);
 
     try {
       const response = await callback(...args);
-      const data = await response.json();
-      setData(data);
+      setData(response);
+      setError(null);
     } catch (error) {
       setError(error);
       toast.error(error.message);
@@ -24,7 +23,7 @@ const USEFETCH = (callback) => {
     }
   };
 
-  return { data, loading, error, setData };
+  return { data, loading, error, fn, setData };
 };
 
 export default USEFETCH;
