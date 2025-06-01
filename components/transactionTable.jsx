@@ -1,6 +1,6 @@
 "use client";
 
-import React, { use, useMemo } from "react";
+import React, { use, useEffect, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -39,6 +39,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
+import USEFETCH from "@/hooks/use-fetch";
+import { bulkDeleteTransactions } from "@/action/account";
+import { toast, Toaster } from "sonner";
+import { BarLoader } from "react-spinners";
 
 const RECURRING_INTERVALS = {
   DAILY: "Daily",
@@ -49,6 +53,30 @@ const RECURRING_INTERVALS = {
 
 const TransactionTable = ({ transactions }) => {
   const router = useRouter();
+
+  const {
+    data: deleted,
+    fn: deleteFn,
+    loading: deleteLoading,
+  } = USEFETCH(bulkDeleteTransactions);
+
+  const handleBulkDelete = async () => {
+    if (
+      !window.confirm(
+        `Are you sure you want to delete ${selectedIds.length} transactions?`
+      )
+    ) {
+      return;
+    }
+
+    deleteFn(selectedIds);
+  };
+
+  useEffect(() => {
+    if (deleted && !deleteLoading) {
+      Toaster.error(`Deleted ${deleted.length} transactions successfully!`);
+    }
+  }, [deleted, deleteLoading]);
 
   // states to mange
   const [searchTerm, setSearchTerm] = React.useState("");
@@ -138,9 +166,7 @@ const TransactionTable = ({ transactions }) => {
         : filterAndSortedTransactions.map((transaction) => transaction.id)
     );
   };
-
-  const handleBulkDelete = () => {};
-
+  // Clear all filters and selected IDs
   const handleClearFilters = () => {
     setSearchTerm("");
     setTypeFilter("");
@@ -150,6 +176,10 @@ const TransactionTable = ({ transactions }) => {
 
   return (
     <div className="space-y-4">
+      {/* loader */}
+      {deleteLoading && (
+        <BarLoader className="mt-4" width={"100%"} color="#9333ea" />
+      )}
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className=" relative flex-1">
@@ -366,7 +396,7 @@ const TransactionTable = ({ transactions }) => {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
-                        <DropdownMenuLabel
+                        <DropdownMenuItem
                           onClick={() =>
                             router.push(
                               `/transaction/create?edit=${transaction.id}`
@@ -374,12 +404,12 @@ const TransactionTable = ({ transactions }) => {
                           }
                         >
                           Edit
-                        </DropdownMenuLabel>
+                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           className="text-destructive"
                           onClick={() => {
-                            //  deleteFn([transaction.id]);
+                            deleteFn([transaction.id]);
                           }}
                         >
                           Delete
@@ -398,5 +428,3 @@ const TransactionTable = ({ transactions }) => {
 };
 
 export default TransactionTable;
-
-// 2.53 stopped
