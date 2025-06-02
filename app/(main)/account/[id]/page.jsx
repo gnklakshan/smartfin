@@ -1,4 +1,5 @@
 import { getAccountWithTransactions } from "@/action/account";
+import AccountChart from "@/app/(main)/account/[id]/compoments/account-chart";
 import TransactionTable from "@/components/transactionTable";
 import { notFound } from "next/navigation";
 import React, { Suspense } from "react";
@@ -35,6 +36,14 @@ const AccountPage = async ({ params }) => {
         </div>
       </div>
       {/* chart section */}
+      {/* use suspense,in order to show loader */}
+      <Suspense
+        fallback={
+          <BarLoader className="mt-4" width={"100%"} color={"#9333ea"} />
+        }
+      >
+        <AccountChart transactions={transactions} />
+      </Suspense>
 
       {/* Transaction Table */}
       {/* use suspense,in order to show loader */}
