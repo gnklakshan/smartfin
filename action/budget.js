@@ -1,5 +1,7 @@
+"use server";
+
 import { db } from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/dist/types/server";
+import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 
 export async function getCurrentBudget(accountId) {
@@ -11,7 +13,9 @@ export async function getCurrentBudget(accountId) {
       where: { clerkUserId: userId },
     });
 
-    if (!user) throw new Error("User not found");
+    if (!user) {
+      throw new Error("User not found");
+    }
 
     const budget = await db.budget.findFirst({
       where: {
@@ -19,20 +23,20 @@ export async function getCurrentBudget(accountId) {
       },
     });
 
+    // Get current month's expenses
     const currentDate = new Date();
     const startOfMonth = new Date(
       currentDate.getFullYear(),
       currentDate.getMonth(),
       1
     );
-
     const endOfMonth = new Date(
       currentDate.getFullYear(),
       currentDate.getMonth() + 1,
       0
     );
 
-    const expenses = await db.transaction.aggregrate({
+    const expenses = await db.transaction.aggregate({
       where: {
         userId: user.id,
         type: "EXPENSE",
@@ -40,8 +44,8 @@ export async function getCurrentBudget(accountId) {
           gte: startOfMonth,
           lte: endOfMonth,
         },
+        accountId,
       },
-      accountId,
       _sum: {
         amount: true,
       },
@@ -54,12 +58,11 @@ export async function getCurrentBudget(accountId) {
         : 0,
     };
   } catch (error) {
-    console.error("Error fetching current budget:", error);
+    console.error("Error fetching budget:", error);
     throw error;
   }
 }
 
-//function to update budget
 export async function updateBudget(amount) {
   try {
     const { userId } = await auth();
@@ -71,8 +74,8 @@ export async function updateBudget(amount) {
 
     if (!user) throw new Error("User not found");
 
-    // Check if a budget already exists for the user
-    let budget = await db.budget.upsert({
+    // Update or create budget
+    const budget = await db.budget.upsert({
       where: {
         userId: user.id,
       },
@@ -86,16 +89,12 @@ export async function updateBudget(amount) {
     });
 
     revalidatePath("/dashboard");
-
     return {
-      Success: true,
+      success: true,
       data: { ...budget, amount: budget.amount.toNumber() },
     };
   } catch (error) {
     console.error("Error updating budget:", error);
-    return {
-      Success: false,
-      error: error.message || "An error occurred while updating the budget",
-    };
+    return { success: false, error: error.message };
   }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { use, useEffect, useMemo } from "react";
+import React, { use, useEffect, useMemo, useState } from "react";
 import {
   Table,
   TableBody,
@@ -79,13 +79,13 @@ const TransactionTable = ({ transactions }) => {
   }, [deleted, deleteLoading]);
 
   // states to mange
-  const [searchTerm, setSearchTerm] = React.useState("");
-  const [typeFilter, setTypeFilter] = React.useState("");
-  const [recurringFilter, setRecurringFilter] = React.useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
+  const [recurringFilter, setRecurringFilter] = useState("");
 
   // State to manage selected transaction IDs and sort configuration
-  const [selectedIds, setSelectedIds] = React.useState([]);
-  const [sortConfig, setSortConfig] = React.useState({
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [sortConfig, setSortConfig] = useState({
     field: "date",
     direction: "desc",
   });
