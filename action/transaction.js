@@ -1,6 +1,7 @@
+"use server";
+
 import { db } from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/dist/types/server";
-import { th } from "date-fns/locale";
+import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 
 const serializeAmount = (obj) => ({
